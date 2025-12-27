@@ -43,7 +43,7 @@ require('./models/Log');
 const allowedOrigins = [
   'http://localhost:5173', // Your new local port
   'http://localhost:5174', // Your old local port
-  'https://your-frontend-site.netlify.app' // Your deployed frontend
+  'https://location-logs.netlify.app' // Your deployed frontend
 ];
 
 app.use(cors({
