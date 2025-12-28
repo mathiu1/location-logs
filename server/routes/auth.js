@@ -77,4 +77,29 @@ router.get('/users', authMiddleware(['admin']), async (req, res) => {
     }
 });
 
+// Update User Role (Admin only)
+router.put('/users/:id/role', authMiddleware(['admin']), async (req, res) => {
+    try {
+        const { role } = req.body;
+        if (!['user', 'admin'].includes(role)) {
+            return res.status(400).json({ message: 'Invalid role' });
+        }
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { role },
+            { new: true, runValidators: true }
+        ).select('-password');
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json(user);
+    } catch (error) {
+        console.error('Error updating user role:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;
