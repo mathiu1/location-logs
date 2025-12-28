@@ -102,4 +102,34 @@ router.put('/users/:id/role', authMiddleware(['admin']), async (req, res) => {
     }
 });
 
+// Update User Password (Admin only)
+router.put('/users/:id/password', authMiddleware(['admin']), [
+    check('password', 'Password must be 6 or more characters').isLength({ min: 6 })
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    try {
+        const { password } = req.body;
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id,
+            { password: hashedPassword },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Error updating user password:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;
