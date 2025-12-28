@@ -41,8 +41,27 @@ router.get('/', authMiddleware(['admin']), async (req, res) => {
             }
         }
 
-        const logs = await Log.find(query).populate('userId', 'username').sort({ timestamp: -1 });
-        res.json(logs);
+        const limit = parseInt(req.query.limit) || 25;
+        const page = parseInt(req.query.page) || 1;
+        const skip = (page - 1) * limit;
+
+        const logs = await Log.find(query)
+            .populate('userId', 'username')
+            .sort({ timestamp: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const total = await Log.countDocuments(query);
+
+        res.json({
+            logs,
+            pagination: {
+                total,
+                page,
+                pages: Math.ceil(total / limit),
+                hasMore: page * limit < total
+            }
+        });
     } catch (error) {
         console.error('Error fetching logs:', error);
         res.status(500).json({ message: 'Server error', error: error.message });
